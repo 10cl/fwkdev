@@ -1,0 +1,45 @@
+apply plugin: 'java'
+
+def defaultEncoding = 'UTF-8'
+sourceSets {
+    main {
+        resources.srcDirs = [
+                "src/frameworks/base/core/res/res/",
+                // TODO: Index custom resource
+        ]
+        java.srcDirs = ["src/frameworks/base/core/java/",
+                        "src/frameworks/base/services/core/java/",
+                        "src/frameworks/base/media/java/",
+                        "src/frameworks/base/graphics/java/",
+                        "src/frameworks/base/services/java/",
+                        "src/frameworks/base/location/java/",
+                        "src/frameworks/base/location/lib/java/",
+                        "src/frameworks/base/services/appwidget/java/",
+                        "src/frameworks/base/apex/jobscheduler/framework/java/",
+                        "src/frameworks/base/apex/jobscheduler/service/java/",
+                        "src/frameworks/base/services/accessibility/java/",
+
+                        // Index some libs
+                        "src/libcore/ojluni/src/main/java/",
+                        "src/libcore/dalvik/src/main/java/",
+                        "src/libcore/json/src/main/java/",
+
+                        // Index some system app
+                        "src/packages/modules/NetworkStack/src/",
+                        "src/packages/modules/NetworkStack/common/captiveportal/src/",
+                        "src/packages/modules/CaptivePortalLogin/src/",
+                        "src/frameworks/base/packages/SystemUI/src/",
+                        "src/frameworks/base/packages/PackageInstaller/src/",
+                        // TODO: Index custom code
+        ]
+    }
+}
+
+compileJava {
+    options.annotationProcessorPath = null
+    options.encoding = defaultEncoding
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+}
