@@ -1,0 +1,166 @@
+{
+  "presubmit": [
+    {
+      "name": "CtsAppTestCases",
+      "options": [
+        { "include-filter": "android.app.cts.TaskDescriptionTest" },
+        { "include-filter": "android.app.cts.ActivityManagerTest" },
+        { "include-filter": "android.app.cts.ActivityManagerProcessStateTest" },
+        { "include-filter": "android.app.cts.ServiceTest" },
+        { "include-filter": "android.app.cts.ActivityManagerFgsBgStartTest" },
+        {
+          "include-annotation": "android.platform.test.annotations.Presubmit"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.LargeTest"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        },
+        { "exclude-annotation": "org.junit.Ignore" }
+      ]
+    },
+    {
+      "name": "CtsAppFgsTestCases",
+      "options": [
+        {
+          "include-annotation": "android.platform.test.annotations.Presubmit"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.LargeTest"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsShortFgsTestCases",
+      "options": [
+        {
+          "include-annotation": "android.platform.test.annotations.Presubmit"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.LargeTest"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "FrameworksServicesTests",
+      "options": [
+        {
+          "include-filter": "com.android.server.am."
+        },
+        {
+          "include-annotation": "android.platform.test.annotations.Presubmit"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "FrameworksMockingServicesTests",
+      "options": [
+        {
+          "include-filter": "com.android.server.am."
+        },
+        {
+          "include-annotation": "android.platform.test.annotations.Presubmit"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "file_patterns": ["Battery[^/]*\\.java", "MeasuredEnergy[^/]*\\.java"],
+      "name": "FrameworksCoreTests",
+      "options": [
+        { "include-filter": "com.android.internal.os.BatteryStatsTests" },
+        { "exclude-annotation": "com.android.internal.os.SkipPresubmit" }
+      ]
+    },
+    {
+      "file_patterns": ["Battery[^/]*\\.java", "MeasuredEnergy[^/]*\\.java"],
+      "name": "FrameworksServicesTests",
+      "options": [
+        { "include-filter": "com.android.server.am.BatteryStatsServiceTest" },
+        { "include-filter": "com.android.server.power.stats.BatteryStatsTests" }
+      ]
+    },
+    {
+      "file_patterns": ["Broadcast.*"],
+      "name": "FrameworksMockingServicesTests",
+      "options": [
+        { "include-filter": "com.android.server.am.BroadcastRecordTest" },
+        { "include-filter": "com.android.server.am.BroadcastQueueTest" },
+        { "include-filter": "com.android.server.am.BroadcastQueueModernImplTest" }
+      ]
+    },
+    {
+      "file_patterns": ["Broadcast.*"],
+      "name": "CtsBroadcastTestCases",
+      "options": [
+        { "exclude-annotation": "androidx.test.filters.LargeTest" },
+        { "exclude-annotation": "androidx.test.filters.FlakyTest" },
+        { "exclude-annotation": "org.junit.Ignore" }
+      ]
+    },
+    {
+      "name": "CtsUsageStatsTestCases",
+      "file_patterns": [
+        "ActivityManagerService\\.java",
+        "BroadcastQueue\\.java"
+      ],
+      "options": [
+        {
+          "include-filter": "android.app.usage.cts.BroadcastResponseStatsTest"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        },
+        {
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.MediumTest"
+        },
+        {
+          "exclude-annotation": "androidx.test.filters.LargeTest"
+        }
+      ]
+    }
+  ],
+  "postsubmit": [
+    {
+      "name": "FrameworksServicesTests",
+      "options": [
+        {
+          "include-filter": "com.android.server.am."
+        }
+      ]
+    },
+    {
+      "name": "CtsAppSecurityHostTestCases",
+      "options": [
+        {
+          "include-filter": "android.appsecurity.cts.AppDataIsolationTests"
+        }
+      ]
+    },
+    {
+      "name": "CtsAppTestCases",
+      "options": [
+        { "include-filter": "android.app.cts.TaskDescriptionTest" },
+        { "include-filter": "android.app.cts.ActivityManagerTest" },
+        { "include-filter": "android.app.cts.ActivityManagerProcessStateTest" },
+        { "include-filter": "android.app.cts.ServiceTest" },
+        { "include-filter": "android.app.cts.ActivityManagerFgsBgStartTest" }
+      ]
+    }
+  ]
+}

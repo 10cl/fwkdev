@@ -1,0 +1,98 @@
+{
+    "presubmit": [
+        {
+            "name": "CtsLocationFineTestCases"
+        },
+        {
+            "name": "CtsLocationCoarseTestCases"
+        },
+        {
+            "name": "CtsLocationNoneTestCases"
+        },
+        {
+            "name": "CtsToastTestCases",
+            "file_patterns": ["NotificationManagerService\\.java"]
+        },
+        {
+            "name": "CtsWindowManagerDeviceTestCases",
+            "options": [
+                {
+                    "include-filter": "android.server.wm.ToastWindowTest"
+                }
+            ],
+            "file_patterns": ["NotificationManagerService\\.java"]
+        },
+        {
+            "name": "CtsScopedStorageCoreHostTest",
+            "file_patterns": ["StorageManagerService\\.java"]
+        },
+        {
+            "name": "CtsScopedStorageHostTest",
+            "file_patterns": ["StorageManagerService\\.java"]
+        },
+        {
+            "name": "CtsScopedStorageDeviceOnlyTest",
+            "file_patterns": ["StorageManagerService\\.java"]
+        },
+        {
+            "name": "FrameworksMockingServicesTests",
+            "options": [
+                {
+                    "include-filter": "com.android.server.sensorprivacy"
+                }
+            ],
+            "file_patterns": ["SensorPrivacyService\\.java"]
+        },
+        {
+            "name": "FrameworksServicesTests",
+            "options": [
+                {
+                    "include-filter": "com.android.server.BinaryTransparencyServiceTest"
+                }
+            ],
+            "file_patterns": ["BinaryTransparencyService\\.java"]
+        },
+        {
+            "name": "BinaryTransparencyHostTest",
+            "file_patterns": [
+                "BinaryTransparencyService\\.java"
+            ]
+        },
+        {
+            "name": "CtsMediaProjectionTestCases",
+            "options": [
+                {
+                    "exclude-annotation": "android.platform.test.annotations.FlakyTest"
+                },
+                {
+                    "exclude-annotation": "androidx.test.filters.FlakyTest"
+                },
+                {
+                    "exclude-annotation": "org.junit.Ignore"
+                }
+            ]
+        },
+        {
+            // GWP-ASan's CTS test ensures that recoverable tombstones work,
+            // which is emitted by the NativeTombstoneManager.
+            "name": "CtsGwpAsanTestCases"
+        }
+    ],
+    "presubmit-large": [
+        {
+            "name": "CtsContentTestCases",
+            "options": [
+                {
+                    "include-filter": "android.content.cts.ClipboardManagerTest"
+                },
+                {
+                    "include-filter": "android.content.cts.ClipDataTest"
+                },
+                {
+                    "include-filter": "android.content.cts.ClipDescriptionTest"
+                }
+            ],
+            "file_patterns": ["ClipboardService\\.java"]
+        }
+    ]
+}
