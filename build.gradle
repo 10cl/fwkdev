@@ -18,3 +18,218 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+/* FwkDev Begin */
+/* Get custom properties from local.properties */
+def getLocalProperty(String propertyName) {
+    def localProperties = new File(project.rootDir, "local.properties")
+    if (localProperties.exists()) {
+        Properties properties = new Properties()
+        localProperties.withInputStream { inputStream ->
+            properties.load(inputStream)
+        }
+        return properties.getProperty(propertyName)
+    }
+    return ""
+}
+
+/* Define properties from local.properties */
+String PROJECT_PATH = getLocalProperty("server.path")
+String PROJECT_COMPARE = getLocalProperty("server.compare")
+String PROJECT_COMPARE_FOLDER = getLocalProperty("server.compare_folder")
+String SERVER_IP = getLocalProperty("server.ip")
+String SERVER_PORT = getLocalProperty("server.port")
+String SERVER_PROJECT = getLocalProperty("server.project")
+String SERVER_FILE_DIFF = getLocalProperty("server.diff")
+String LOCAL_PUSH_FWK = getLocalProperty("local.pushfwk")
+
+def COMPARE_FOLDER = "${SERVER_IP}:${PROJECT_COMPARE_FOLDER}"
+String SERVER_OUT_FRAMEWORK_PATH = "${SERVER_IP}:${PROJECT_PATH}out/target/product/${SERVER_PROJECT}/system/framework/"
+
+/* Split server diff folder */
+String[] SERVER_DIFF_FOLDER = []
+if (SERVER_FILE_DIFF) {
+    SERVER_DIFF_FOLDER = SERVER_FILE_DIFF.split(";")
+    for (String diff : SERVER_DIFF_FOLDER) {
+        println "       diff folder: " + diff
+    }
+}
+
+ArrayList<String> PROJECT_PATH_LISTS = [
+        "frameworks/base/core/java/",
+        "frameworks/base/services/core/java/",
+        "frameworks/base/media/java/",
+        "frameworks/base/graphics/java/",
+        "frameworks/base/services/java/",
+        "frameworks/base/location/java/",
+        "frameworks/base/location/lib/java/",
+        "frameworks/base/services/appwidget/java/",
+        "frameworks/base/apex/jobscheduler/framework/java/",
+        "frameworks/base/apex/jobscheduler/service/java/",
+        "frameworks/base/services/accessibility/java/",
+        "libcore/ojluni/src/main/java/",
+        "libcore/dalvik/src/main/java/",
+        "libcore/json/src/main/java/",
+        // Add other paths...
+]
+
+ArrayList<String> DEVICE_UPDATE_FILE_LIST = [
+        "framework.jar",
+        "services.jar",
+        "framework-res.apk",
+        "boot-framework.vdex",
+        "oat/arm64/services.art",
+        "oat/arm64/services.odex",
+        "arm64/boot-framework.art",
+        "arm64/boot-framework.oat",
+        "arm64/boot.art",
+        "arm64/boot.oat",
+        "arm/boot-framework.art",
+        "arm/boot-framework.oat",
+        "arm/boot.art",
+        "arm/boot.oat",
+        // Add other files...
+]
+
+ArrayList<String> SERVER_FILE_LIST = [
+        "frameworks/base/services/core/java/com/android/server/notification/"
+        // Add other files/paths...
+]
+
+/* Pull remote files script */
+task pullFwk(type: Exec) {
+    println "--------- pullFwk ----------"
+
+    def command = PROJECT_PATH_LISTS.collect { path ->
+        "mkdir -p dev/src/${path};scp -r -P ${SERVER_PORT} ${SERVER_IP}:${PROJECT_PATH}${path}* dev/src/${path};"
+    }.join()
+
+    executable 'bash'
+    args "-c", command
+}
+
+/* Push changed files to remote server script */
+task pushFwk(type: Exec) {
+    println "--------- pushFwk ----------"
+    def command = ""
+    def out = new ByteArrayOutputStream()
+
+    exec {
+        workingDir '/'
+        commandLine "git", "diff", "--name-only"
+        standardOutput = out
+    }
+
+    println "========== Changed Files ========== "
+    out.toString().eachLine { line ->
+        String[] files = line.split(" ")
+        files.each { file ->
+            if (file.length() > 20 && file.contains("dev/src")) {
+                file = file.replace("dev/src", "")
+                String prefix = file.substring(0, 20)
+
+                if (!prefix.contains("out")) {
+                    boolean isUploaded = SERVER_DIFF_FOLDER.length == 0
+
+                    SERVER_DIFF_FOLDER.each { diff ->
+                        if (!isUploaded && diff != "" && file.contains(diff)) {
+                            command += "scp -r -P ${SERVER_PORT} dev/src${file} ${SERVER_IP}:${PROJECT_PATH}${file};"
+                            isUploaded = true
+                        }
+                    }
+
+                    println "       $file" + (isUploaded ? "    (uploaded to server)" : "")
+                }
+            }
+        }
+    }
+
+    executable 'bash'
+    args "-c", command
+}
+
+/* Pull remote generated files to local script */
+task pullUpdateJar(type: Exec) {
+    println "---------- pullUpdateJar  ---------"
+    def command = "mkdir -p tmp/system/framework/arm64/;mkdir -p tmp/system/framework/arm/;mkdir -p tmp/system/framework/oat/arm64/;"
+    command += "scp -r -P ${SERVER_PORT} ${SERVER_OUT_FRAMEWORK_PATH} tmp/system/;"
+    executable 'bash'
+    args "-c", command
+}
+
+/* Push generated files to device after updating locally */
+task pushUpdateJar(type: Exec) {
+    println "---------- pushUpdateJar  ---------"
+    def command = "adb root;adb remount;sleep 5;adb root;adb remount;"
+
+    if (LOCAL_PUSH_FWK == "true") {
+        DEVICE_UPDATE_FILE_LIST.each { file ->
+            def pushPath = "system/framework/"
+
+            if (file.contains("oat")) {
+                pushPath += "oat/arm64/"
+            } else if (file.contains("arm64")) {
+                pushPath += "arm64/"
+            } else if (file.contains("arm")) {
+                pushPath += "arm/"
+            }
+
+            def localFile = "tmp/system/framework/${file}"
+
+            if (new File(localFile).exists()) {
+                def current = "adb push $localFile $pushPath;"
+                command += current
+                println current
+            }
+        }
+    }
+
+    command += "adb reboot"
+    executable 'bash'
+    args "-c", command
+}
+pushUpdateJar.dependsOn(pullUpdateJar)
+
+/* Compare files using Beyond Compare */
+task compareFile(type: Exec) {
+    println "---------- compareFile  ---------"
+
+    def command = ""
+    String lastFile = PROJECT_COMPARE
+    command += "mkdir -p dev/src/`dirname ${lastFile}`;"
+    command += "mkdir -p compare/platform/`dirname ${lastFile}`;"
+    if (lastFile && lastFile.contains(".")) {
+        command += "scp -r -P ${SERVER_PORT} ${SERVER_IP}:${PROJECT_PATH}${lastFile} dev/src/${lastFile};"
+        command += "scp -r -P ${SERVER_PORT} ${COMPARE_FOLDER}${lastFile} compare/platform/${lastFile};"
+    }else{
+        command += "scp -r -P ${SERVER_PORT} ${SERVER_IP}:${PROJECT_PATH}${lastFile} dev/src/`dirname ${lastFile}`;"
+        command += "scp -r -P ${SERVER_PORT} ${COMPARE_FOLDER}${lastFile} compare/platform/`dirname ${lastFile}`;"
+    }
+
+    def compareCommand = "BComp dev/src/${lastFile} compare/platform/${lastFile};"
+    println "compareCommand: $compareCommand"
+    command += compareCommand
+    executable 'bash'
+    args "-c", command
+}
+
+/* Pull other project files from remote */
+task pullServerFile(type: Exec) {
+    println "---------- pullServerFile  ---------"
+    def command = ""
+
+    SERVER_FILE_LIST.each { path ->
+        println "       $path    (downloaded)"
+        command += "mkdir -p dev/src/`dirname ${path}`;"
+
+        if (path.contains(".")) {
+            command += "scp -r -P ${SERVER_PORT} ${SERVER_IP}:${PROJECT_PATH}/${path} dev/src/${path};"
+        } else {
+            command += "scp -r -P ${SERVER_PORT} ${SERVER_IP}:${PROJECT_PATH}/${path} dev/src/`dirname ${path}`;"
+        }
+    }
+
+    executable 'bash'
+    args "-c", command
+}
+/* FwkDev end */
